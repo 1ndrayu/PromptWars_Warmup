@@ -1,0 +1,56 @@
+type User @table {
+  displayName: String!
+  email: String!
+  createdAt: Timestamp!
+  photoUrl: String
+  lastLogin: Timestamp
+}
+
+type Topic @table {
+  name: String!
+  description: String!
+  createdAt: Timestamp!
+  imageUrl: String
+}
+
+type Lesson @table {
+  title: String!
+  content: String!
+  orderInTopic: Int!
+  createdAt: Timestamp!
+  estimatedReadingTime: Int
+  videoUrl: String
+  topic: Topic
+}
+
+type UserProgress @table {
+  isCompleted: Boolean!
+  createdAt: Timestamp!
+  completionDate: Timestamp
+  user: User
+  lesson: Lesson
+}
+
+type Quiz @table {
+  title: String!
+  createdAt: Timestamp!
+  lesson: Lesson
+}
+
+type UserQuizAttempt @table {
+  score: Int!
+  attemptDate: Timestamp!
+  createdAt: Timestamp!
+  user: User
+  quiz: Quiz
+}
+
+type FinancialGoal @table {
+  name: String!
+  targetAmount: Float!
+  currentAmount: Float!
+  targetDate: Date!
+  createdAt: Timestamp!
+  description: String
+  user: User
+}
