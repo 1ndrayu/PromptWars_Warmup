@@ -2,17 +2,17 @@ import React from 'react';
 
 const Map = ({ levels, currentLevel, onSelectLevel }) => {
   return (
-    <div className="fadeIn" style={{ padding: '32px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', flex: 1, backgroundColor: 'var(--color-bg)' }}>
-      <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-        <h2 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Your Financial Journey</h2>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>Follow the path to master your money!</p>
+    <div className="fadeIn" style={{ padding: 'clamp(24px, 4vh, 48px) clamp(16px, 4vw, 32px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(24px, 4vh, 40px)', flex: 1, backgroundColor: 'var(--color-bg)' }}>
+      <div style={{ textAlign: 'center', marginBottom: '1vh' }}>
+        <h2 style={{ fontSize: 'clamp(1.2rem, 4vw, 1.4rem)', marginBottom: '1vh' }}>Your Financial Journey</h2>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'clamp(0.85rem, 2.5vw, 0.9rem)' }}>Follow the path to master your money!</p>
       </div>
 
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '40px', alignItems: 'center' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 'clamp(32px, 6vh, 48px)', alignItems: 'center' }}>
         <div style={{
           position: 'absolute',
-          top: '20px',
-          bottom: '20px',
+          top: '2vh',
+          bottom: '2vh',
           width: '6px',
           backgroundColor: 'var(--color-surface-dim)',
           zIndex: 0,

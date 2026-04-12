@@ -174,7 +174,22 @@ function App() {
       </header>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {activeLesson ? (
+        {currentLevel > levels.length ? (
+          <div className="fadeIn" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5vw', textAlign: 'center', gap: '4vh' }}>
+            <Mascot size="large" emotion="celebrate" />
+            <h1 style={{ color: 'var(--color-primary)', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Congratulations!</h1>
+            <p style={{ fontSize: 'clamp(1rem, 3vw, 1.2rem)', color: 'var(--color-text-secondary)', maxWidth: '80%' }}>You have completed all the financial literacy modules!</p>
+            <div style={{ backgroundColor: 'var(--color-surface-dim)', padding: '4vw', borderRadius: '2vw', display: 'flex', flexDirection: 'column', gap: '2vh', width: '100%', maxWidth: '300px', margin: '2vh 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(1rem, 4vw, 1.2rem)', fontWeight: 'bold' }}>
+                <span>Final Score:</span>
+                <span style={{ color: 'var(--color-warning)' }}>🪙 {coins}</span>
+              </div>
+            </div>
+            <button className="btn btn-primary" onClick={() => { setCurrentLevel(1); setCoins(0); }} style={{ marginTop: '2vh', width: '100%', maxWidth: '300px' }}>
+              Play Again
+            </button>
+          </div>
+        ) : activeLesson ? (
           <Lesson 
             lesson={activeLesson} 
             onComplete={handleCompleteLesson} 

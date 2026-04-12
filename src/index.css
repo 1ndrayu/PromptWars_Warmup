@@ -38,12 +38,24 @@
 
 body {
   margin: 0;
+  padding: clamp(16px, 4vh, 32px);
   font-family: var(--font-family);
   background-color: var(--color-surface-dim);
   color: var(--color-text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -53,17 +65,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .app-container {
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  min-height: 100vh;
+  min-height: 80vh;
   background-color: var(--color-bg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
+
 .header {
-  padding: 16px 24px;
+  padding: clamp(12px, 3vh, 24px) clamp(16px, 4vw, 32px);
   border-bottom: 2px solid var(--color-surface-dim);
   display: flex;
   justify-content: space-between;

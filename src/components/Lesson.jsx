@@ -126,23 +126,23 @@ const Lesson = ({ lesson, onComplete, onCancel }) => {
   );
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1, backgroundColor: 'var(--color-bg)' }}>
+    <div style={{ padding: 'clamp(16px, 4vw, 32px)', display: 'flex', flexDirection: 'column', flex: 1, backgroundColor: 'var(--color-bg)' }}>
       {/* Top bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(16px, 4vh, 32px)' }}>
         <button 
           onClick={onCancel}
           style={{ background: 'transparent', border: 'none', fontSize: '1.5rem', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
         >
           ✖
         </button>
-        <div style={{ flex: 1, margin: '0 16px', height: '10px', backgroundColor: 'var(--color-surface-dim)', borderRadius: '5px', overflow: 'hidden' }}>
+        <div style={{ flex: 1, margin: '0 4vw', height: '10px', backgroundColor: 'var(--color-surface-dim)', borderRadius: '5px', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${((step + 1) / content.length) * 100}%`, backgroundColor: 'var(--color-secondary)', transition: 'width 0.4s ease' }}></div>
         </div>
-        <span style={{ fontWeight: 'bold', minWidth: '80px', textAlign: 'right' }}>{lesson.topic}</span>
+        <span style={{ fontWeight: 'bold', minWidth: '80px', textAlign: 'right', fontSize: 'clamp(0.9rem, 3vw, 1.1rem)' }}>{lesson.topic}</span>
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '32px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'clamp(24px, 5vh, 40px)' }}>
         {currentStep.text ? renderTeachContent() : renderQuizContent()}
       </div>
 
