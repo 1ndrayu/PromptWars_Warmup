@@ -61,7 +61,7 @@ function App() {
 
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex items-center gap-2"
@@ -81,7 +81,7 @@ function App() {
                 {Math.round((completedCount / tabs.length) * 100)}% Complete
               </div>
             </div>
-            <button 
+            <button
               onClick={restartSession}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
               title="Reset Session"
@@ -95,7 +95,7 @@ function App() {
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 relative z-10">
         <AnimatePresence mode="wait">
           {isFullyComplete ? (
-            <motion.div 
+            <motion.div
               key="celebration"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -119,14 +119,13 @@ function App() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative px-6 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all duration-200 ${
-                        activeTab === tab.id ? 'text-black' : 'text-slate-400 hover:text-slate-600'
-                      }`}
+                      className={`relative px-6 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest transition-all duration-200 ${activeTab === tab.id ? 'text-black' : 'text-slate-400 hover:text-slate-600'
+                        }`}
                     >
                       {activeTab === tab.id && (
-                        <motion.div 
+                        <motion.div
                           layoutId="activeTabIndicator"
-                          className="absolute inset-0 bg-slate-100 rounded-lg -z-0" 
+                          className="absolute inset-0 bg-slate-100 rounded-lg -z-0"
                         />
                       )}
                       <span className="relative z-10 flex items-center gap-2">
@@ -139,7 +138,7 @@ function App() {
               </div>
 
               {/* View Injection */}
-              <motion.div 
+              <motion.div
                 key={activeTab}
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -147,15 +146,15 @@ function App() {
                 transition={{ duration: 0.2 }}
               >
                 {activeTab === 'challenges' ? (
-                  <ChallengeCase 
-                    steps={topicsData.challenges.steps} 
-                    onComplete={handleComplete} 
+                  <ChallengeCase
+                    steps={topicsData.challenges.steps}
+                    onComplete={handleComplete}
                   />
                 ) : (
-                  <TopicTab 
-                    data={topicsData[activeTab]} 
+                  <TopicTab
+                    data={topicsData[activeTab]}
                     accent={currentTab.accent}
-                    onComplete={handleComplete} 
+                    onComplete={handleComplete}
                   />
                 )}
               </motion.div>
@@ -168,13 +167,13 @@ function App() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="font-serif font-bold text-lg text-black">MasteringMoney</div>
           <div className="flex items-center gap-8 text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
-            <span>Infrastructure</span>
+            <span>SAVINGS</span>
             <span className="text-slate-200">|</span>
-            <span>Security</span>
+            <span>BUDGETTING</span>
             <span className="text-slate-200">|</span>
-            <span>Compliance</span>
+            <span>INVESTING</span>
           </div>
-          <div className="text-[10px] text-slate-300 font-bold">© 2024</div>
+          <div className="text-[10px] text-slate-300 font-bold">© 2026</div>
         </div>
       </footer>
     </div>
