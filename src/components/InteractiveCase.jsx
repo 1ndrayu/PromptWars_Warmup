@@ -1,117 +1,138 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function InteractiveCase({ data, onScoreUpdate, onAdvance }) {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+const InteractiveCase = ({ data, onComplete, accent }) => {
+  const [selected, setSelected] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  
-  // To shuffle options only once on mount, and track the true index of correct answer
-  const [shuffledOptions, setShuffledOptions] = useState([]);
-  const [correctShuffledIndex, setCorrectShuffledIndex] = useState(null);
-
-  useEffect(() => {
-    // We match the 'correctAnswer' string to find the index after shuffle
-    const optionsWithOriginals = data.options.map(opt => ({ text: opt }));
-    // simple shuffle
-    const shuffled = [...optionsWithOriginals].sort(() => Math.random() - 0.5);
-    setShuffledOptions(shuffled);
-    
-    const correctIdx = shuffled.findIndex(item => item.text === data.correctAnswer);
-    setCorrectShuffledIndex(correctIdx);
-  }, [data]);
-
-  const isCorrect = selectedOption === correctShuffledIndex;
+  const maxAttempts = 2;
 
   const handleSubmit = () => {
-    if (isCorrect) {
-      setIsSubmitted(true);
-      // Give full points if 0 attempts, half points if 1 attempt
-      const score = attempts === 0 ? 100 : 50;
-      onScoreUpdate(score);
+    if (!selected || submitted) return;
+    setSubmitted(true);
+    setAttempts(prev => prev + 1);
+  };
+
+  const isCorrect = selected === data.correctAnswer;
+  const canRetry = attempts < maxAttempts && !isCorrect;
+
+  const accentClasses = {
+    green: 'border-accent-green bg-accent-green/5 text-accent-green',
+    blue: 'border-accent-blue bg-accent-blue/5 text-accent-blue',
+    yellow: 'border-accent-yellow bg-accent-yellow/5 text-accent-yellow',
+    orange: 'border-accent-orange bg-accent-orange/5 text-accent-orange',
+  };
+
+  const handleAction = () => {
+    if (isCorrect || attempts >= maxAttempts) {
+      onComplete(isCorrect);
     } else {
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      if (newAttempts >= 2) {
-        setIsSubmitted(true);
-        onScoreUpdate(0); // 0 points for failing twice
-      } else {
-        setSelectedOption(null); // allow retry
-      }
+      setSubmitted(false);
+      setSelected(null);
     }
   };
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-in">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 className="text-xl font-heading font-medium text-slate-800 mb-4">{data.title}</h3>
-        <p className="text-slate-600 leading-relaxed mb-6">
-          {data.scenario}
-        </p>
-            if (isSubmitted) {
-              if (idx === correctShuffledIndex) {
-                btnClass += "bg-amber-50 border-amber-500 text-amber-900 shadow-sm ring-2 ring-amber-200";
-              } else if (isSelected && !isCorrect) {
-                btnClass += "bg-red-50 border-red-300 text-red-900";
-              } else {
-                btnClass += "bg-white border-slate-200 text-slate-400 opacity-50";
-              }
-            } else {
-              if (isSelected) {
-                btnClass += "bg-slate-900 border-slate-900 text-white shadow-md transform scale-[1.01]";
-              } else {
-                btnClass += "bg-white border-slate-200 text-slate-600 hover:border-slate-400 hover:bg-slate-50 hover:-translate-y-0.5";
-              }
-            }
+    <div className="bg-white border-2 border-slate-900 rounded-[2.5rem] p-8 md:p-12 max-w-4xl mx-auto shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden">
+      {/* Visual Accent Bar */}
+      <div className={`absolute top-0 left-0 w-full h-2 bg-accent-${accent || 'blue'}`} />
+      
+      <div className="space-y-10">
+        <header>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="bg-slate-100 text-slate-900 text-[9px] font-black px-2.5 py-1 rounded border border-slate-200 uppercase tracking-widest">Case Logic</span>
+            <h3 className="text-3xl font-serif text-black font-bold tracking-tight">{data.title}</h3>
+          </div>
+          <div className="bg-slate-50 border-l-4 border-black p-6 rounded-r-2xl">
+            <p className="text-slate-600 font-sans italic leading-relaxed">
+              "{data.scenario}"
+            </p>
+          </div>
+        </header>
 
-            return (
-              <button
+        <div className="space-y-6">
+          <p className="text-black font-serif font-bold text-xl">
+            {data.question}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.options.map((option, idx) => (
+              <motion.button
                 key={idx}
-                disabled={isSubmitted}
-                onClick={() => setSelectedOption(idx)}
-                className={btnClass}
+                disabled={submitted}
+                onClick={() => setSelected(option)}
+                className={`flex p-5 rounded-2xl text-left transition-all border-2 relative group ${
+                  selected === option 
+                    ? submitted
+                      ? option === data.correctAnswer 
+                        ? 'border-accent-green bg-accent-green/5' 
+                        : 'border-accent-orange bg-accent-orange/5'
+                      : 'border-black bg-slate-50'
+                    : submitted && option === data.correctAnswer && attempts >= maxAttempts
+                      ? 'border-accent-green/30 bg-accent-green/5'
+                      : 'border-slate-100 bg-white hover:border-slate-300'
+                }`}
+                whileHover={!submitted ? { scale: 1.01 } : {}}
               >
-                <span className="leading-relaxed text-sm">{opt.text}</span>
-              </button>
-            );
-          })}
+                <div className={`w-6 h-6 rounded-lg border-2 mr-4 flex-shrink-0 flex items-center justify-center transition-colors ${
+                  selected === option ? 'border-black bg-black text-white' : 'border-slate-200 group-hover:border-slate-400'
+                }`}>
+                  {selected === option && <div className="w-2 h-2 bg-white rounded-full" />}
+                </div>
+                <span className={`text-sm font-bold ${selected === option ? 'text-black' : 'text-slate-500'}`}>
+                  {option}
+                </span>
+
+                {submitted && option === data.correctAnswer && (
+                  <div className="absolute top-2 right-2 text-[8px] font-black text-accent-green uppercase tracking-tighter">Target Path</div>
+                )}
+              </motion.button>
+            ))}
+          </div>
         </div>
 
-        {attempts === 1 && !isSubmitted && (
-          <div className="mt-4 p-3 bg-rose-50 text-rose-700 rounded-lg text-sm font-medium border border-rose-200 animate-slide-up">
-            Incorrect. You have 1 attempt remaining. Please try again.
-          </div>
-        )}
-
-        {isSubmitted && (
-          <div className="mt-8 pt-6 border-t border-slate-100 animate-slide-up">
-            <div className={`p-5 rounded-lg flex flex-col gap-2 ${isCorrect || attempts < 2 ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-red-50 text-red-900 border border-red-200'}`}>
-              <span className="font-semibold text-lg">{isCorrect ? 'Correct!' : 'Out of attempts. Review the concept below:'}</span>
-              <p className="text-sm opacity-90 leading-relaxed mt-1">{data.feedback.reasoning}</p>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button 
-                onClick={onAdvance}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium shadow-sm transition-transform hover:-translate-y-0.5"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!isSubmitted && (
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSubmit}
-              disabled={selectedOption === null}
-              className={`px-8 py-3 rounded-lg font-medium transition-all ${selectedOption !== null ? 'bg-slate-800 text-white hover:bg-slate-900 shadow-sm hover:-translate-y-0.5' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
+        <AnimatePresence mode="wait">
+          {submitted ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`p-8 rounded-3xl border-2 space-y-4 ${isCorrect ? 'border-accent-green/20 bg-accent-green/5' : 'border-accent-orange/20 bg-accent-orange/5'}`}
             >
-              Submit Answer
-            </button>
-          </div>
-        )}
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${isCorrect ? 'bg-accent-green' : 'bg-accent-orange'} animate-pulse`} />
+                <span className={`font-black uppercase tracking-[0.2em] text-[10px] ${isCorrect ? 'text-accent-green' : 'text-accent-orange'}`}>
+                  {isCorrect ? 'Strategic Alignment Verified' : `Inconsistent Hypothesis (${attempts}/${maxAttempts})`}
+                </span>
+              </div>
+              <h4 className="font-serif font-bold text-lg text-black">Strategic Rationale</h4>
+              <p className="text-slate-700 text-sm leading-relaxed max-w-2xl font-medium">
+                {isCorrect ? data.feedback.reasoning : (attempts >= maxAttempts ? data.feedback.reasoning : "The proposed allocation lacks the necessary defensive benchmarks for this risk profile.")}
+              </p>
+              
+              <div className="flex justify-end pt-6 border-t border-slate-900/10 mt-6">
+                <button
+                  onClick={handleAction}
+                  className={isCorrect || attempts >= maxAttempts ? "btn-primary" : "btn-outline !text-black !border-black"}
+                >
+                  {isCorrect ? 'Conclude Module' : (attempts >= maxAttempts ? 'Execute with Rationale' : 'Recalibrate Hypothesis')}
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div className="flex justify-end pt-8">
+              <button
+                disabled={!selected}
+                onClick={handleSubmit}
+                className={`btn-primary !px-12 !py-4 text-xs ${!selected ? 'opacity-30 grayscale cursor-not-allowed shadow-none' : 'shadow-2xl shadow-black/10'}`}
+              >
+                Commit Decision Matrix
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
-}
+};
+
+export default InteractiveCase;

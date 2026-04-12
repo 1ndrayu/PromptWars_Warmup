@@ -1,132 +1,200 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ChallengeCase({ data, onScoreUpdate, onAdvance }) {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isRevealed, setIsRevealed] = useState(false);
+const ChallengeCase = ({ steps, onComplete }) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [direction, setDirection] = useState(1);
 
-  const handleSelect = (idx) => {
-    setSelectedOption(idx);
-    setIsRevealed(true);
-    // Since all are correct, we award 100 points for the challenge completion
-    onScoreUpdate(100);
+  const data = steps[currentIdx];
+
+  useEffect(() => {
+    setSelected(null);
+    setConfirmed(false);
+  }, [currentIdx]);
+
+  const handleNext = () => {
+    if (currentIdx < steps.length - 1) {
+      setDirection(1);
+      setCurrentIdx(currentIdx + 1);
+    } else {
+      onComplete();
+    }
   };
 
-  const activeOption = selectedOption !== null ? data.options[selectedOption] : null;
-
-  const StatBadge = ({ label, value, color }) => (
-    <div className={`flex flex-col items-center p-2 rounded-lg bg-white border border-slate-100 shadow-sm animate-cascade`}>
-      <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</span>
-      <span className={`text-lg font-bold ${color}`}>+{value}</span>
-    </div>
-  );
+  const handlePrev = () => {
+    if (currentIdx > 0) {
+      setDirection(-1);
+      setCurrentIdx(currentIdx - 1);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fade-in max-w-4xl mx-auto">
-      {/* Profile Header */}
-      <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 p-8 rounded-2xl shadow-xl text-white relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-amber-400 flex items-center justify-center text-blue-900 text-xl font-bold">
-              {data.profile.initials}
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">{data.profile.name}, {data.profile.age}</h3>
-              <p className="text-blue-200 text-sm uppercase tracking-widest">{data.profile.role}</p>
-            </div>
+    <div className="max-w-6xl mx-auto py-8">
+      {/* Profile Header - Clean B&W */}
+      <motion.div 
+        key={`header-${currentIdx}`}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row items-center gap-8 mb-12 bg-white p-8 rounded-[2rem] border-2 border-slate-900 shadow-[0_10px_40px_rgba(0,0,0,0.04)]"
+      >
+        <div className="w-24 h-24 rounded-2xl bg-black flex items-center justify-center text-4xl font-serif text-white shadow-xl flex-shrink-0">
+          {data.profile.initials}
+        </div>
+        <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-8 w-full">
+          <div>
+            <div className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Character</div>
+            <div className="text-xl font-serif font-bold text-black">{data.profile.name}, {data.profile.age}</div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
-              <p className="text-[10px] text-blue-300 uppercase font-bold">Net Inflow</p>
-              <p className="text-lg font-mono font-bold text-amber-300">{data.profile.income}</p>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
-              <p className="text-[10px] text-blue-300 uppercase font-bold">Savings</p>
-              <p className="text-lg font-mono font-bold text-emerald-300">{data.profile.savings}</p>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
-              <p className="text-[10px] text-blue-300 uppercase font-bold">Debt</p>
-              <p className="text-lg font-mono font-bold text-rose-300">{data.profile.debt}</p>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm">
-              <p className="text-[10px] text-blue-300 uppercase font-bold">Main Goal</p>
-              <p className="text-sm font-bold truncate">{data.profile.goal}</p>
+          <div>
+            <div className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Gross Yield</div>
+            <div className="text-xl font-serif font-bold text-black">{data.profile.income}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Liquid Reserves</div>
+            <div className="text-xl font-serif font-bold text-black">{data.profile.savings}</div>
+          </div>
+          <div>
+            <div className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-1">Critical Objective</div>
+            <div className="text-[10px] text-accent-orange font-black uppercase tracking-widest bg-accent-orange/10 px-3 py-1 rounded inline-block">
+              {data.profile.goal}
             </div>
           </div>
         </div>
-        {/* Glow effect */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-amber-400/10 rounded-full blur-[80px]"></div>
-      </div>
+      </motion.div>
 
-      {/* Scenario */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-4">
-        <h4 className="text-blue-900 font-bold text-lg border-b border-slate-100 pb-2">The Situation</h4>
-        <p className="text-slate-700 leading-relaxed italic border-l-4 border-amber-400 pl-4 bg-slate-50 py-2 rounded-r-lg">
-          "{data.scenario}"
-        </p>
-        <p className="text-slate-800 font-medium mt-2">{data.question}</p>
+      {/* Scenario Body */}
+      <motion.div 
+        key={`body-${currentIdx}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-12"
+      >
+        <div className="bg-slate-50 border-2 border-slate-900 p-10 rounded-[2.5rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4">
+             <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">Module_04 / Profile_0{currentIdx + 1}</span>
+          </div>
+          <h4 className="text-[10px] uppercase tracking-[0.2em] text-black font-black mb-6 flex items-center gap-2">
+            <span className="w-4 h-0.5 bg-black" /> Contextual Scenario
+          </h4>
+          <p className="text-2xl font-serif text-black leading-snug italic max-w-4xl">"{data.scenario}"</p>
+        </div>
 
-        {/* Options */}
-        <div className="flex flex-col gap-4 mt-4">
-          {data.options.map((opt, idx) => {
-            const isSelected = selectedOption === idx;
-            const isDisabled = isRevealed && !isSelected;
+        <div className="space-y-8">
+           <div className="flex items-center gap-4">
+              <h3 className="text-xl font-serif font-bold text-black whitespace-nowrap">{data.question}</h3>
+              <div className="h-[2px] w-full bg-slate-100" />
+           </div>
 
-            return (
-              <div 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {data.options.map((option, idx) => (
+              <motion.div
                 key={idx}
-                className={`transition-all duration-500 flex flex-col ${isDisabled ? 'opacity-40 scale-95 pointer-events-none' : ''}`}
+                className={`relative flex flex-col p-8 rounded-3xl border-2 transition-all h-full ${
+                  selected?.label === option.label 
+                    ? 'border-black bg-white shadow-2xl shadow-black/5' 
+                    : 'border-slate-100 bg-white'
+                }`}
+                whileHover={!confirmed ? { scale: 1.02 } : {}}
               >
-                <button
-                  onClick={() => handleSelect(idx)}
-                  disabled={isRevealed}
-                  className={`text-left p-6 rounded-xl border-2 transition-all flex flex-col gap-3 group items-start shadow-sm
-                    ${isSelected ? 'border-amber-400 bg-amber-50/50 ring-4 ring-amber-100' : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/30'}
-                  `}
-                >
-                  <div className="flex justify-between w-full items-start">
-                    <span className="font-bold text-blue-900 group-hover:text-blue-700 transition-colors uppercase text-sm tracking-wide">
-                      {opt.label}
-                    </div>
-                    {isSelected && (
-                      <span className="bg-amber-400 text-white text-[10px] font-black px-2 py-1 rounded">CHOSEN STRATEGY</span>
-                    )}
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed">{opt.content}</p>
+                <div className="flex items-start justify-between mb-6">
+                  <button
+                    disabled={confirmed}
+                    onClick={() => setSelected(option)}
+                    className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all ${
+                      selected?.label === option.label ? 'border-black bg-black text-white shadow-lg' : 'border-slate-200 hover:border-black'
+                    }`}
+                  >
+                    {selected?.label === option.label && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{option.label}</span>
+                </div>
 
-                  {/* Cascading Stats Reveal */}
-                  {isSelected && isRevealed && (
-                    <div className="w-full mt-6 pt-6 border-t border-amber-200 flex flex-col gap-4 animate-slide-up">
-                      <div className="grid grid-cols-3 gap-3">
-                        <StatBadge label="Stability" value={opt.stats.stability} color="text-blue-600" />
-                        <StatBadge label="Growth" value={opt.stats.growth} color="text-amber-600" />
-                        <StatBadge label="Efficiency" value={opt.stats.efficiency} color="text-emerald-600" />
+                <p className="text-sm text-slate-600 mb-8 flex-1 leading-relaxed font-medium">{option.content}</p>
+
+                <AnimatePresence>
+                  {confirmed && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="space-y-6 pt-6 border-t-2 border-slate-50 mt-auto"
+                    >
+                      <div className="space-y-3">
+                        <StatBar label="Stability" value={option.stats.stability} color="bg-accent-green" />
+                        <StatBar label="Growth" value={option.stats.growth} color="bg-accent-blue" />
+                        <StatBar label="Efficiency" value={option.stats.efficiency} color="bg-accent-orange" />
                       </div>
-                      <div className="bg-slate-900 p-4 rounded-lg text-white text-xs leading-loose relative overflow-hidden">
-                        <div className="relative z-10">
-                          <span className="text-amber-400 font-bold uppercase block mb-1">Strategic Outcome:</span>
-                          {opt.explanation}
-                        </div>
-                        <div className="absolute -bottom-4 -right-4 w-12 h-12 bg-blue-500/20 rounded-full blur-lg"></div>
-                      </div>
-                    </div>
+                      <p className="text-[10px] leading-relaxed text-slate-500 font-bold uppercase tracking-tight italic">
+                        {option.explanation}
+                      </p>
+                    </motion.div>
                   )}
-                </button>
-              </div>
-            );
-          })}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Navigation Controls */}
+      <div className="flex flex-col md:flex-row items-center justify-between border-t-2 border-slate-100 pt-10 mt-16 gap-8">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={handlePrev}
+            disabled={currentIdx === 0}
+            className="btn-outline group h-12 flex items-center px-8"
+          >
+            ← Previous
+          </button>
+          <div className="flex items-center gap-1.5">
+            {steps.map((_, i) => (
+              <div 
+                key={i} 
+                className={`w-10 h-1 rounded-full transition-all duration-300 ${i === currentIdx ? 'bg-black w-14' : (i < currentIdx ? 'bg-slate-400' : 'bg-slate-100')}`} 
+              />
+            ))}
+          </div>
         </div>
 
-        {isRevealed && (
-          <div className="mt-8 flex justify-center animate-bounce">
-            <button 
-              onClick={onAdvance}
-              className="bg-blue-900 hover:bg-blue-800 text-amber-400 px-12 py-4 rounded-full font-black shadow-2xl transition-all hover:scale-105 active:scale-95 border-2 border-amber-400/50"
+        <div className="flex gap-4 w-full md:w-auto">
+          {!confirmed ? (
+            <button
+              disabled={!selected}
+              onClick={() => setConfirmed(true)}
+              className={`btn-primary flex-1 md:flex-none h-12 px-12 text-xs !rounded-xl ${!selected ? 'opacity-20 grayscale cursor-not-allowed shadow-none' : 'shadow-xl shadow-black/10'}`}
             >
-              COMMIT TO NEXT YEARS →
+              Verify Strategy
             </button>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={handleNext}
+              className="btn-gold h-12 px-12 text-xs !bg-black !rounded-xl flex-1 md:flex-none"
+            >
+              {currentIdx === steps.length - 1 ? 'Conclude Certification' : 'Execute Next Profile'}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+const StatBar = ({ label, value, color }) => (
+  <div className="space-y-1.5">
+    <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">
+      <span>{label}</span>
+      <span className="text-black">{value}%</span>
+    </div>
+    <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden">
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: `${value}%` }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "circOut" }}
+        className={`h-full ${color}`} 
+      />
+    </div>
+  </div>
+);
+
+export default ChallengeCase;

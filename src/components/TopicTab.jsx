@@ -1,75 +1,76 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ConceptMatrix from './ConceptMatrix';
 import InteractiveCase from './InteractiveCase';
-import ChallengeCase from './ChallengeCase';
 
-export default function TopicTab({ topic, onScoreUpdate, onAdvance }) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const steps = topic.steps;
-  const activeData = steps[currentStep];
+const TopicTab = ({ data, onComplete, accent }) => {
+  const [view, setView] = useState('matrix');
 
-  const handleNextInfo = () => {
-    setCurrentStep(prev => prev + 1);
-  };
-
-  const handleBack = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1));
+  const handleAssessmentComplete = (isCorrect) => {
+    if (isCorrect) onComplete();
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-8 animate-fade-in pb-12">
-      {/* Header Info */}
-      <div className="relative text-center mb-4 flex items-center justify-center">
-        {currentStep > 0 && (
-          <button 
-            onClick={handleBack}
-            className="absolute left-0 text-slate-500 hover:text-slate-800 font-medium text-sm flex items-center gap-1 transition-colors"
-          >
-            ← Back
-          </button>
-        )}
-        <div>
-        <div>
-          <h2 className="text-3xl font-heading font-semibold text-slate-900">{topic.title}</h2>
-          <p className="text-slate-500 mt-2">{topic.description}</p>
+    <div className="relative min-h-[70vh] flex flex-col">
+      {/* Background Glory (Subtle) */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-slate-50 blur-[100px] rounded-full -z-10 pointer-events-none" />
+      
+      {/* Tab Header */}
+      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between border-b-2 border-slate-900 pb-8 px-2 gap-6">
+        <div className="max-w-xl">
+          <h2 className="text-4xl font-serif text-black font-bold tracking-tight mb-3">
+            {data.title}
+          </h2>
+          <p className="text-slate-500 font-sans text-sm leading-relaxed">
+            {data.description}
+          </p>
+        </div>
+
+        <div className="text-right">
+          <div className="text-[10px] uppercase font-black tracking-[0.2em] text-black mb-2">Phase Vector</div>
+          <div className="inline-flex items-center gap-2 bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200">
+            <span className={`w-2 h-2 rounded-full ${view === 'matrix' ? 'bg-black' : 'bg-slate-300'}`} />
+            <span className="text-[10px] text-slate-900 font-bold uppercase tracking-wider font-mono">
+              {view === 'matrix' ? 'Concept Retrieval' : 'Strategic Proof'}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Progress Indicators */}
-      <div className="flex justify-center gap-3 mb-8">
-        {steps.map((step, idx) => (
-          <div 
-            key={idx} 
-            className={`h-2 rounded-full transition-all duration-500 ${
-              idx === currentStep ? 'w-16 bg-blue-600' : 
-              idx < currentStep ? 'w-8 bg-blue-200' : 'w-8 bg-slate-200'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Content Area */}
-      <div className="flex-1 w-full flex justify-center">
-        {activeData.type === 'info' ? (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 w-full animate-slide-up">
-            <h3 className="text-sm font-bold tracking-wider text-blue-600 uppercase mb-4">{activeData.title}</h3>
-            <p className="text-lg text-slate-700 leading-relaxed font-medium">
-              {activeData.content}
-            </p>
-            <div className="mt-10 flex justify-end">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={view}
+          initial={{ opacity: 0, x: view === 'matrix' ? -10 : 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: view === 'matrix' ? 10 : -10 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          {view === 'matrix' ? (
+            <ConceptMatrix
+              data={data}
+              accent={accent}
+              onComplete={() => setView('assessment')}
+            />
+          ) : (
+            <div className="space-y-8">
               <button 
-                onClick={handleNextInfo}
-                className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3 rounded-lg font-medium shadow-md transition-colors"
+                onClick={() => setView('matrix')}
+                className="btn-outline group"
               >
-                Next
+                ← Back to Matrix
               </button>
+              
+              <InteractiveCase 
+                data={data.assessment} 
+                accent={accent}
+                onComplete={handleAssessmentComplete} 
+              />
             </div>
-          </div>
-        ) : activeData.type === 'case' ? (
-          <InteractiveCase data={activeData} onScoreUpdate={onScoreUpdate} onAdvance={onAdvance} />
-        ) : (
-          <ChallengeCase data={activeData} onScoreUpdate={onScoreUpdate} onAdvance={onAdvance} />
-        )}
-      </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default TopicTab;
