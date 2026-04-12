@@ -7,6 +7,7 @@ import { topicsData } from './data/content';
 function App() {
   const [activeTab, setActiveTab] = useState('savings');
   const [completed, setCompleted] = useState({ savings: false, budgeting: false, investing: false, challenges: false });
+  const [sessionStats, setSessionStats] = useState(null);
 
   const tabs = [
     { id: 'savings', label: 'Savings', accent: 'green' },
@@ -23,6 +24,7 @@ function App() {
         const parsed = JSON.parse(saved);
         if (parsed.activeTab) setActiveTab(parsed.activeTab);
         if (parsed.completed) setCompleted(parsed.completed);
+        if (parsed.sessionStats) setSessionStats(parsed.sessionStats);
       } catch (e) {
         console.error("Session restoration failed", e);
       }
@@ -30,11 +32,13 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem('mastering-money-session-v2', JSON.stringify({ activeTab, completed }));
-  }, [activeTab, completed]);
+    localStorage.setItem('mastering-money-session-v2', JSON.stringify({ activeTab, completed, sessionStats }));
+  }, [activeTab, completed, sessionStats]);
 
-  const handleComplete = () => {
+  const handleComplete = (stats) => {
     setCompleted(prev => ({ ...prev, [activeTab]: true }));
+    if (stats) setSessionStats(stats);
+    
     const currentIndex = tabs.findIndex(t => t.id === activeTab);
     if (currentIndex < tabs.length - 1) {
       setActiveTab(tabs[currentIndex + 1].id);
@@ -44,12 +48,23 @@ function App() {
   const restartSession = () => {
     localStorage.removeItem('mastering-money-session-v2');
     setCompleted({ savings: false, budgeting: false, investing: false, challenges: false });
+    setSessionStats(null);
     setActiveTab('savings');
+  };
+
+  const getProfileType = (stats) => {
+    if (!stats) return null;
+    const { stability, growth, efficiency } = stats;
+    if (stability >= growth && stability >= efficiency) return { name: "The Fortress", icon: "🏰", color: "text-accent-green", desc: "Your decisions prioritize security and long-term resilience over rapid expansion." };
+    if (growth >= stability && growth >= efficiency) return { name: "The Architect", icon: "🏗️", color: "text-accent-yellow", desc: "You are focused on compounding assets and strategic market positioning." };
+    if (efficiency >= stability && efficiency >= growth) return { name: "The Optimizer", icon: "⚡", color: "text-accent-orange", desc: "You excel at maximizing cash flow and ensuring every dollar works with maximum velocity." };
+    return { name: "The Equilibrium Specialist", icon: "⚖️", color: "text-accent-blue", desc: "You maintain a sophisticated balance across all financial dimensions." };
   };
 
   const currentTab = tabs.find(t => t.id === activeTab);
   const completedCount = Object.values(completed).filter(s => s).length;
   const isFullyComplete = completed.challenges;
+  const profile = getProfileType(sessionStats);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-slate-900 selection:text-white flex flex-col font-sans overflow-x-hidden">
@@ -99,16 +114,51 @@ function App() {
               key="celebration"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center text-center py-20 bg-white border-2 border-slate-900 rounded-[2rem] shadow-2xl"
+              className="max-w-4xl mx-auto flex flex-col items-center"
             >
-              <div className="text-6xl mb-8">🎯</div>
-              <h1 className="text-5xl font-serif font-bold mb-6 text-black">Strategic Mastery Certifed</h1>
-              <p className="text-slate-500 max-w-md mx-auto mb-12 leading-relaxed text-lg">
-                You have demonstrated technical proficiency across all financial domains. Your profile is now set for optimized capital growth.
-              </p>
-              <button onClick={restartSession} className="btn-primary !px-12 !py-4 text-sm">
-                Restart Curriculum
-              </button>
+              <div className="w-full bg-white border-2 border-black rounded-[3rem] p-12 shadow-[0_30px_60px_rgba(0,0,0,0.08)] text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-3xl text-4xl mb-8">
+                  {profile?.icon || "🎯"}
+                </div>
+                
+                <h1 className="text-sm font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Certification Complete</h1>
+                <h2 className="text-5xl font-serif font-bold mb-6 text-black">
+                  Your Persona: <span className={profile?.color}>{profile?.name}</span>
+                </h2>
+                
+                <p className="text-slate-500 max-w-xl mx-auto mb-12 leading-relaxed text-lg">
+                  {profile?.desc} You have navigated complex financial scenarios with consistent internal logic.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 text-left">
+                  {[
+                    { label: "Stability", value: sessionStats?.stability, color: "bg-accent-green" },
+                    { label: "Growth", value: sessionStats?.growth, color: "bg-accent-yellow" },
+                    { label: "Efficiency", value: sessionStats?.efficiency, color: "bg-accent-orange" }
+                  ].map((stat) => (
+                    <div key={stat.label} className="bg-white p-6 rounded-2xl border-2 border-slate-900 shadow-[4px_4px_0px_#000]">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">{stat.label}</div>
+                      <div className="flex items-end gap-2 mb-4">
+                        <span className="text-3xl font-serif font-bold text-black">{stat.value}%</span>
+                        <span className="text-[10px] font-bold text-slate-300 pb-1">MARK</span>
+                      </div>
+                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${stat.value}%` }}
+                          className={`h-full ${stat.color}`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                  <button onClick={restartSession} className="btn-primary !px-12 !py-4 text-xs !rounded-2xl shadow-xl shadow-black/10">
+                    Restart Curriculum
+                  </button>
+                </div>
+              </div>
             </motion.div>
           ) : (
             <div className="space-y-12">
@@ -148,7 +198,7 @@ function App() {
                 {activeTab === 'challenges' ? (
                   <ChallengeCase
                     steps={topicsData.challenges.steps}
-                    onComplete={handleComplete}
+                    onComplete={(stats) => handleComplete(stats)}
                   />
                 ) : (
                   <TopicTab

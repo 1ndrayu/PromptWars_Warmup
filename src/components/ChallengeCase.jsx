@@ -7,6 +7,8 @@ const ChallengeCase = ({ steps, onComplete }) => {
   const [confirmed, setConfirmed] = useState(false);
   const [direction, setDirection] = useState(1);
 
+  const [selectedStats, setSelectedStats] = useState([]);
+
   const data = steps[currentIdx];
 
   useEffect(() => {
@@ -19,7 +21,32 @@ const ChallengeCase = ({ steps, onComplete }) => {
       setDirection(1);
       setCurrentIdx(currentIdx + 1);
     } else {
-      onComplete();
+      // Calculate averages excluding any potentially undefined entries
+      const validStats = selectedStats.filter(s => s && typeof s.stability === 'number');
+      const count = validStats.length || 1; // Prevent division by zero
+      
+      const avgStats = validStats.reduce((acc, curr) => ({
+        stability: acc.stability + curr.stability,
+        growth: acc.growth + curr.growth,
+        efficiency: acc.efficiency + curr.efficiency
+      }), { stability: 0, growth: 0, efficiency: 0 });
+
+      onComplete({
+        stability: Math.round(avgStats.stability / count),
+        growth: Math.round(avgStats.growth / count),
+        efficiency: Math.round(avgStats.efficiency / count)
+      });
+    }
+  };
+
+  const handleConfirm = () => {
+    if (selected !== null) {
+      setConfirmed(true);
+      setSelectedStats(prev => {
+        const next = [...prev];
+        next[currentIdx] = selected.stats;
+        return next;
+      });
     }
   };
 
@@ -161,7 +188,7 @@ const ChallengeCase = ({ steps, onComplete }) => {
           {!confirmed ? (
             <button
               disabled={!selected}
-              onClick={() => setConfirmed(true)}
+              onClick={handleConfirm}
               className={`btn-primary flex-1 md:flex-none h-12 px-12 text-xs !rounded-xl ${!selected ? 'opacity-20 grayscale cursor-not-allowed shadow-none' : 'shadow-xl shadow-black/10'}`}
             >
               Verify Strategy
@@ -186,7 +213,7 @@ const StatBar = ({ label, value, color }) => (
       <span>{label}</span>
       <span className="text-black">{value}%</span>
     </div>
-    <div className="h-1.5 bg-slate-50 rounded-full overflow-hidden">
+    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
       <motion.div 
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
