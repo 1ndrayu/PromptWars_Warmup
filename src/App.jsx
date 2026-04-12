@@ -1,206 +1,133 @@
 import React, { useState } from 'react';
-import Map from './components/Map';
-import Lesson from './components/Lesson';
-import Mascot from './components/Mascot';
+import TopicTab from './components/TopicTab';
+import { topicsData } from './data/content';
+import './App.css';
 
 function App() {
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [activeLesson, setActiveLesson] = useState(null);
-  const [coins, setCoins] = useState(0);
-  
-  const levels = [
-    // Topic: Savings
-    { 
-      id: 1, topic: 'Savings', title: 'Learn', type: 'teach',
-      content: [
-        { text: "Welcome! Saving is simply putting money aside for future use and emergencies.", emotion: "happy" },
-        { text: "A great strategy is 'Pay Yourself First'. This means directing a portion of your income straight into savings before you have a chance to spend it.", emotion: "thinking" }
-      ]
-    },
-    { 
-      id: 2, topic: 'Savings', title: 'Test', type: 'quiz',
-      content: [
-        {
-          question: "What does 'Pay Yourself First' mean?",
-          options: ["Buy yourself a luxury item on payday.", "Put money into savings immediately before any spending.", "Pay all your bills first, then save whatever is left."],
-          correct: 1,
-          hint: "Think about making your savings a priority, treating it like the very first bill you must pay."
-        }
-      ]
-    },
-    { 
-      id: 3, topic: 'Savings', title: 'Case Study', type: 'case',
-      content: [
-        { text: "Real World Case: You received a $1,000 paycheck. You really want a new $500 smartwatch, but you currently have $0 in emergency savings.", emotion: "thinking" },
-        {
-          question: "What is the most financially secure approach?",
-          options: ["Buy the watch, then save the remaining $500.", "Save $200 first, and wait a few paychecks to afford the watch.", "Take a loan to buy the watch and keep the $1,000."],
-          correct: 1,
-          hint: "Emergencies can happen anytime! It's safer to have savings building up instead of spending half your cash immediately."
-        }
-      ]
-    },
-    
-    // Topic: Budgeting
-    { 
-      id: 4, topic: 'Budgeting', title: 'Learn', type: 'teach',
-      content: [
-        { text: "Budgeting is making a plan for your money. A popular method is the 50/30/20 rule.", emotion: "happy" },
-        { text: "50% for Needs, 30% for Wants, and 20% for Savings or Debt repayment. It keeps things balanced!", emotion: "happy" }
-      ]
-    },
-    { 
-      id: 5, topic: 'Budgeting', title: 'Test', type: 'quiz',
-      content: [
-        {
-          question: "According to the 50/30/20 rule, what does the 20% represent?",
-          options: ["Wants", "Needs", "Savings and Debt repayment"],
-          correct: 2,
-          hint: "Needs takes the largest portion (50) and Wants takes the second (30)."
-        }
-      ]
-    },
-    { 
-      id: 6, topic: 'Budgeting', title: 'Case Study', type: 'case',
-      content: [
-        { text: "Real World Case: Your monthly income is $2,000. Your rent and groceries cost $1,200. You want to spend $500 on dining out.", emotion: "thinking" },
-        {
-          question: "How does this fit into the 50/30/20 rule?",
-          options: ["It fits perfectly.", "Needs are too high (60%), making it hard to save effectively.", "Wants are too high, they should be $200 max."],
-          correct: 1,
-          hint: "Calculate 50% of 2,000. That's $1,000. So $1,200 for rent and groceries exceeds the 50% Needs limit."
-        }
-      ]
-    },
-    
-    // Topic: Investing
-    { 
-      id: 7, topic: 'Investing', title: 'Learn', type: 'teach',
-      content: [
-        { text: "Investing is using your money to buy assets that grow in value over time, like stocks or bonds.", emotion: "happy" },
-        { text: "The key to investing is 'compound interest'—earning returns on your returns! Time is your best friend here.", emotion: "celebrate" }
-      ]
-    },
-    { 
-      id: 8, topic: 'Investing', title: 'Test', type: 'quiz',
-      content: [
-        {
-          question: "What is the primary goal of investing?",
-          options: ["To hide money under a mattress", "To let money grow over time to build wealth", "To spend it immediately on wants"],
-          correct: 1,
-          hint: "Think about the magic of compound interest and building something for your future."
-        }
-      ]
-    },
-    { 
-      id: 9, topic: 'Investing', title: 'Case Study', type: 'case',
-      content: [
-        { text: "Real World Case: You have $1,000 saved securely in an emergency fund, and an extra $500. You want it to grow for your retirement in 30 years.", emotion: "thinking" },
-        {
-          question: "Where should you put the $500?",
-          options: ["A checking account with 0% interest.", "A diversified stock market index fund.", "Spend it since retirement is far away."],
-          correct: 1,
-          hint: "For long-term goals like retirement (30 years!), you want an option that Historically outpaces inflation."
-        }
-      ]
-    },
+  const [activeTab, setActiveTab] = useState('savings');
+  const [scores, setScores] = useState({ savings: null, budgeting: null, investing: null, challenges: null });
+  const [completed, setCompleted] = useState({ savings: false, budgeting: false, investing: false, challenges: false });
 
-    // Topic: Advising Others
-    { 
-      id: 10, topic: 'Advising', title: 'Grandma Betty', type: 'case',
-      content: [
-        { text: "Grandma Betty wants to protect her retirement savings, but a stranger called asking for a money transfer to 'fix her computer'.", emotion: "sad" },
-        {
-          question: "What should she do?",
-          options: ["Hang up immediately and do not send money.", "Send the money to fix the computer safely.", "Give them her bank password so they can check."],
-          correct: 0,
-          hint: "Never give out money or bank access to unverified callers. It's almost always a scam."
-        }
-      ]
-    },
-    { 
-      id: 11, topic: 'Advising', title: 'Little Timmy', type: 'case',
-      content: [
-        { text: "Little Timmy gets $5 a week for allowance. He wants to buy a $20 toy, but he also loves buying $1 candy every day.", emotion: "thinking" },
-        {
-          question: "How can he get the toy?",
-          options: ["Beg his parents for the $20.", "Skip the candy for 4 weeks and save the $5 allowance.", "Buy the candy and hope the toy gets cheaper."],
-          correct: 1,
-          hint: "To reach a savings goal, sometimes you have to sacrifice smaller daily wants."
-        }
-      ]
-    },
-    { 
-      id: 12, topic: 'Advising', title: 'Parent Paul', type: 'case',
-      content: [
-        { text: "Paul just got a $2,000 bonus. He has $1,500 in credit card debt with 20% interest and wants a vacation.", emotion: "thinking" },
-        {
-          question: "What is his best financial move?",
-          options: ["Go on a $2,000 vacation and ignore the debt.", "Pay off the $1,500 debt and use the remaining $500 for a mini-vacation.", "Put it all in a checking account and pay the minimum on the credit card."],
-          correct: 1,
-          hint: "High-interest debt grows very fast! It is usually the best decision to eliminate it ASAP."
-        }
-      ]
-    }
+  const tabs = [
+    { id: 'savings', label: 'Casterly Vaults' },
+    { id: 'budgeting', label: "The Hand's Ledger" },
+    { id: 'investing', label: 'Iron Bank Strategy' },
+    { id: 'challenges', label: 'The Great Game' }
   ];
 
-  const handleStartLesson = (level) => {
-    setActiveLesson(level);
+  // Load session from localStorage on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('finlit-session');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.scores) setScores(parsed.scores);
+        if (parsed.activeTab) setActiveTab(parsed.activeTab);
+        if (parsed.completed) setCompleted(parsed.completed);
+      } catch (e) {
+        console.error("Failed to parse session", e);
+      }
+    }
+  }, []);
+
+  // Save session to localStorage when relevant state changes
+  React.useEffect(() => {
+    localStorage.setItem('finlit-session', JSON.stringify({ scores, activeTab, completed }));
+  }, [scores, activeTab, completed]);
+
+  const handleScoreUpdate = (score) => {
+    setScores(prev => ({ ...prev, [activeTab]: score }));
   };
 
-  const handleCompleteLesson = (reward) => {
-    setCoins(coins + reward);
-    if (activeLesson.id === currentLevel) {
-      setCurrentLevel(currentLevel + 1);
+  const handleAdvance = () => {
+    setCompleted(prev => ({ ...prev, [activeTab]: true }));
+    const currentIndex = tabs.findIndex(t => t.id === activeTab);
+    if (currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1].id);
     }
-    setActiveLesson(null);
+  };
+
+  const totalScore = Object.values(scores).reduce((acc, curr) => acc + (curr || 0), 0);
+  const completedCount = Object.values(completed).filter(s => s).length;
+
+  const restartSession = () => {
+    setScores({ savings: null, budgeting: null, investing: null, challenges: null });
+    setCompleted({ savings: false, budgeting: false, investing: false, challenges: false });
+    setActiveTab('savings');
   };
 
   return (
-    <div className="app-container">
-      <header className="header">
-        <div className="header-title">
-          <Mascot size="small" emotion="happy" />
-          <span>Cent</span>
-        </div>
-        <div className="header-stats">
-          <div className="stat">
-            <span>⭐</span> {currentLevel - 1}
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900 flex flex-col">
+      {/* Navigation Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="font-heading font-bold text-2xl tracking-tight text-slate-900 leading-none">
+              Lan<span className="text-blue-600">nister</span>.
+            </div>
+            <span className="text-[10px] text-amber-600 font-bold uppercase tracking-[0.2em] mt-1 ml-0.5">Always Pays His Debts</span>
           </div>
-          <div className="stat">
-            <span>🪙</span> {coins}
+          <div className="flex gap-4">
+            <div className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              Standing: {completedCount}/{tabs.length}
+            </div>
+            <div className="text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-100 shadow-sm">
+              Wealth & Honor: {totalScore}
+            </div>
           </div>
         </div>
       </header>
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {currentLevel > levels.length ? (
-          <div className="fadeIn" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5vw', textAlign: 'center', gap: '4vh' }}>
-            <Mascot size="large" emotion="celebrate" />
-            <h1 style={{ color: 'var(--color-primary)', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Congratulations!</h1>
-            <p style={{ fontSize: 'clamp(1rem, 3vw, 1.2rem)', color: 'var(--color-text-secondary)', maxWidth: '80%' }}>You have completed all the financial literacy modules!</p>
-            <div style={{ backgroundColor: 'var(--color-surface-dim)', padding: '4vw', borderRadius: '2vw', display: 'flex', flexDirection: 'column', gap: '2vh', width: '100%', maxWidth: '300px', margin: '2vh 0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'clamp(1rem, 4vw, 1.2rem)', fontWeight: 'bold' }}>
-                <span>Final Score:</span>
-                <span style={{ color: 'var(--color-warning)' }}>🪙 {coins}</span>
-              </div>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8 flex flex-col">
+        {completedCount === tabs.length ? (
+          <div className="flex-1 flex flex-col items-center justify-center animate-slide-up text-center max-w-lg mx-auto">
+            <div className="bg-amber-100 text-amber-600 w-20 h-20 rounded-full flex items-center justify-center mb-6 text-4xl shadow-sm border border-amber-200">
+              ✓
             </div>
-            <button className="btn btn-primary" onClick={() => { setCurrentLevel(1); setCoins(0); }} style={{ marginTop: '2vh', width: '100%', maxWidth: '300px' }}>
-              Play Again
+            <h1 className="text-4xl font-heading font-bold text-slate-900 mb-4">Course Completed</h1>
+            <p className="text-lg text-slate-600 mb-8">
+              You have successfully completed all modules. Your final financial literacy score is:
+            </p>
+            <div className="text-5xl font-bold text-blue-600 bg-blue-50 px-8 py-6 rounded-2xl border border-blue-100 shadow-sm">
+              {totalScore} <span className="text-xl text-blue-400">/ 800</span>
+            </div>
+            <button 
+              onClick={restartSession}
+              className="mt-12 text-slate-500 hover:text-slate-800 font-medium underline underline-offset-4"
+            >
+              Start Over
             </button>
           </div>
-        ) : activeLesson ? (
-          <Lesson 
-            lesson={activeLesson} 
-            onComplete={handleCompleteLesson} 
-            onCancel={() => setActiveLesson(null)} 
-          />
         ) : (
-          <Map 
-            levels={levels} 
-            currentLevel={currentLevel} 
-            onSelectLevel={handleStartLesson} 
-          />
+          <>
+            {/* Tabs */}
+            <div className="flex gap-2 mb-12 p-1 bg-slate-200/50 rounded-xl mx-auto w-fit">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    activeTab === tab.id 
+                      ? 'bg-white text-blue-700 shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                  }`}
+                >
+                  {tab.label}
+                  {completed[tab.id] && (
+                    <span className="ml-2 inline-flex items-center justify-center bg-amber-100 text-amber-700 w-4 h-4 rounded-full text-[10px]">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* active tab content */}
+            <TopicTab 
+              key={activeTab} // Use key to force unmount/remount on tab switch
+              topic={topicsData[activeTab]} 
+              onScoreUpdate={handleScoreUpdate}
+              onAdvance={handleAdvance}
+            />
+          </>
         )}
       </main>
     </div>
