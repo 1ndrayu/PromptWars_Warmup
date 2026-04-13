@@ -1,13 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { auth, db } from './lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import TopicTab from './components/TopicTab';
 import ChallengeCase from './components/ChallengeCase';
+import VelocityEngine from './components/VelocityEngine';
+import LeakHunter from './components/LeakHunter';
+import MarketPulse from './components/MarketPulse';
+import Login from './components/Login';
 import { topicsData } from './data/content';
 
 function App() {
+  const [session, setSession] = useState(null);
   const [activeTab, setActiveTab] = useState('savings');
   const [completed, setCompleted] = useState({ savings: false, budgeting: false, investing: false, challenges: false });
   const [sessionStats, setSessionStats] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setSession(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const tabs = [
     { id: 'savings', label: 'Savings', accent: 'green' },
@@ -16,24 +33,38 @@ function App() {
     { id: 'challenges', label: 'Challenges', accent: 'orange' }
   ];
 
-  // Persistence logic
-  React.useEffect(() => {
-    const saved = localStorage.getItem('mastering-money-session-v2');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.activeTab) setActiveTab(parsed.activeTab);
-        if (parsed.completed) setCompleted(parsed.completed);
-        if (parsed.sessionStats) setSessionStats(parsed.sessionStats);
-      } catch (e) {
-        console.error("Session restoration failed", e);
+  // Cloud/Local Syncing
+  useEffect(() => {
+    if (!session) return;
+    
+    const fetchProfile = async () => {
+      const docRef = doc(db, "profiles", session.uid);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setCompleted(data.completed || { savings: false, budgeting: false, investing: false, challenges: false });
+        setSessionStats(data.stats);
       }
-    }
-  }, []);
+    };
+    fetchProfile();
+  }, [session]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (session) {
+      const sync = async () => {
+        setIsSyncing(true);
+        await setDoc(doc(db, "profiles", session.uid), {
+          completed,
+          stats: sessionStats,
+          updated_at: serverTimestamp()
+        }, { merge: true });
+        setTimeout(() => setIsSyncing(false), 800);
+      };
+      sync();
+    }
     localStorage.setItem('mastering-money-session-v2', JSON.stringify({ activeTab, completed, sessionStats }));
-  }, [activeTab, completed, sessionStats]);
+  }, [activeTab, completed, sessionStats, session]);
 
   const handleComplete = (stats) => {
     setCompleted(prev => ({ ...prev, [activeTab]: true }));
@@ -52,19 +83,30 @@ function App() {
     setActiveTab('savings');
   };
 
+  const handleSignOut = () => signOut(auth);
+
+  const personas = [
+    { id: 'fortress', name: "The Fortress", icon: "🏰", color: "text-blue-500", bg: "bg-blue-50", desc: "Prioritizes security and resilience. You build walls before bridges.", diff: "Focuses on high Stability (80%+) and defensive reserves." },
+    { id: 'architect', name: "The Architect", icon: "🏗️", color: "text-yellow-500", bg: "bg-yellow-50", desc: "Focused on compounding and growth. You build for the horizon.", diff: "Prioritizes high Growth (80%+) and strategic asset placement." },
+    { id: 'optimizer', name: "The Optimizer", icon: "⚡", color: "text-orange-500", bg: "bg-orange-50", desc: "Maximizes cash flow and work velocity. Every dollar is a soldier.", diff: "Focused on high Efficiency (80%+) and capital turnover." },
+    { id: 'equilibrium', name: "The Specialist", icon: "⚖️", color: "text-slate-500", bg: "bg-slate-50", desc: "Maintains a sophisticated balance across all dimensions.", diff: "Requires balanced stats with no single category dominating." }
+  ];
+
   const getProfileType = (stats) => {
     if (!stats) return null;
     const { stability, growth, efficiency } = stats;
-    if (stability >= growth && stability >= efficiency) return { name: "The Fortress", icon: "🏰", color: "text-accent-green", desc: "Your decisions prioritize security and long-term resilience over rapid expansion." };
-    if (growth >= stability && growth >= efficiency) return { name: "The Architect", icon: "🏗️", color: "text-accent-yellow", desc: "You are focused on compounding assets and strategic market positioning." };
-    if (efficiency >= stability && efficiency >= growth) return { name: "The Optimizer", icon: "⚡", color: "text-accent-orange", desc: "You excel at maximizing cash flow and ensuring every dollar works with maximum velocity." };
-    return { name: "The Equilibrium Specialist", icon: "⚖️", color: "text-accent-blue", desc: "You maintain a sophisticated balance across all financial dimensions." };
+    if (stability >= growth && stability >= efficiency) return personas[0];
+    if (growth >= stability && growth >= efficiency) return personas[1];
+    if (efficiency >= stability && efficiency >= growth) return personas[2];
+    return personas[3];
   };
 
   const currentTab = tabs.find(t => t.id === activeTab);
   const completedCount = Object.values(completed).filter(s => s).length;
   const isFullyComplete = completed.challenges;
   const profile = getProfileType(sessionStats);
+
+  if (!session) return <Login />;
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-slate-900 selection:text-white flex flex-col font-sans overflow-x-hidden">
@@ -73,41 +115,54 @@ function App() {
         <div className="absolute top-0 left-1/4 w-[50vw] h-[50vh] bg-slate-100/30 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 right-1/4 w-[50vw] h-[50vh] bg-slate-50/50 blur-[100px] rounded-full" />
       </div>
-
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="fixed top-6 left-0 right-0 z-50 px-6 pointer-events-none">
+        <div className="max-w-4xl mx-auto h-16 bg-white/70 backdrop-blur-xl border border-slate-200/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center justify-between px-8 pointer-events-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3"
           >
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-serif font-bold text-lg">
+            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-serif font-bold text-lg">
               M
             </div>
-            <div className="font-serif font-bold text-xl tracking-tight text-black">
-              Mastering<span className="text-slate-500">Money</span>
+            <div className="font-serif font-bold text-lg tracking-tight text-slate-900">
+              Mastering<span className="text-slate-400">Money</span>
             </div>
           </motion.div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Session Momentum</span>
-              <div className="text-xs font-bold text-black bg-slate-100 px-3 py-1 rounded-full mt-1">
-                {Math.round((completedCount / tabs.length) * 100)}% Complete
+          <div className="flex items-center gap-8">
+            {session && (
+              <div className="flex items-center gap-6">
+                <AnimatePresence>
+                  {isSyncing && (
+                    <motion.span 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-[9px] font-bold text-blue-500 uppercase tracking-widest animate-pulse"
+                    >
+                      Syncing
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                <div className="hidden sm:flex flex-col items-center">
+                  <div className="text-[9px] font-bold text-slate-900 bg-slate-50 px-3 py-1 rounded-full uppercase tracking-tighter">
+                    {Math.round((completedCount / tabs.length) * 100)}%
+                  </div>
+                </div>
+                <button 
+                  onClick={handleSignOut}
+                  className="text-[9px] font-bold text-slate-400 hover:text-slate-900 uppercase tracking-[0.2em] transition-colors"
+                >
+                  Exit
+                </button>
               </div>
-            </div>
-            <button
-              onClick={restartSession}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors group"
-              title="Reset Session"
-            >
-              <span className="text-xs font-bold text-slate-400 group-hover:text-black uppercase tracking-tighter transition-colors">Reset</span>
-            </button>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-12 relative z-10">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-6 pt-32 pb-12 relative z-10">
         <AnimatePresence mode="wait">
           {isFullyComplete ? (
             <motion.div
@@ -116,33 +171,61 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-4xl mx-auto flex flex-col items-center"
             >
-              <div className="w-full bg-white border-2 border-black rounded-[3rem] p-12 shadow-[0_30px_60px_rgba(0,0,0,0.08)] text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-50 rounded-3xl text-4xl mb-8">
+              <div className="w-full card-premium !rounded-[2.5rem] p-16 text-center overflow-visible">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-50 rounded-3xl text-5xl mb-10 shadow-inner">
                   {profile?.icon || "🎯"}
                 </div>
                 
-                <h1 className="text-sm font-black uppercase tracking-[0.3em] text-slate-400 mb-4">Certification Complete</h1>
-                <h2 className="text-5xl font-serif font-bold mb-6 text-black">
-                  Your Persona: <span className={profile?.color}>{profile?.name}</span>
+                <h1 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 mb-6 font-sans">Certification Complete</h1>
+                <h2 className="text-6xl font-serif font-medium mb-12 text-slate-900 leading-tight">
+                   The <span className={profile?.color}>{profile?.name.split(' ').pop()}</span> Persona
                 </h2>
                 
-                <p className="text-slate-500 max-w-xl mx-auto mb-12 leading-relaxed text-lg">
-                  {profile?.desc} You have navigated complex financial scenarios with consistent internal logic.
+                <div className="flex flex-wrap justify-center gap-6 mb-16 relative">
+                  {personas.map((p) => (
+                    <div key={p.id} className="relative group">
+                      <motion.div
+                        whileHover={{ y: -5 }}
+                        className={`w-28 h-28 rounded-2xl flex flex-col items-center justify-center border transition-all duration-500 cursor-help
+                          ${profile?.id === p.id 
+                            ? `border-slate-900 ${p.bg} shadow-lg shadow-slate-200` 
+                            : 'grayscale opacity-40 hover:grayscale-0 hover:opacity-100 border-slate-100 bg-white'}`}
+                      >
+                        <span className="text-3xl mb-2">{p.icon}</span>
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${profile?.id === p.id ? 'text-slate-900' : 'text-slate-400'}`}>
+                          {p.name.split(' ').pop()}
+                        </span>
+                      </motion.div>
+
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-48 p-4 bg-slate-900 text-white rounded-xl text-left opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 z-50">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">{p.name}</div>
+                        <div className="text-[11px] font-medium leading-relaxed mb-3 text-slate-300">{p.desc}</div>
+                        <div className="text-[9px] font-bold text-slate-500 uppercase border-t border-white/10 pt-2 tracking-tighter">
+                          Distinction: {p.diff}
+                        </div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-slate-500 max-w-xl mx-auto mb-16 leading-relaxed text-xl italic font-serif">
+                   "{profile?.desc}"
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20 text-left">
                   {[
-                    { label: "Stability", value: sessionStats?.stability, color: "bg-accent-green" },
-                    { label: "Growth", value: sessionStats?.growth, color: "bg-accent-yellow" },
-                    { label: "Efficiency", value: sessionStats?.efficiency, color: "bg-accent-orange" }
+                    { label: "Stability", value: sessionStats?.stability, color: "bg-blue-500" },
+                    { label: "Growth", value: sessionStats?.growth, color: "bg-yellow-500" },
+                    { label: "Efficiency", value: sessionStats?.efficiency, color: "bg-orange-500" }
                   ].map((stat) => (
-                    <div key={stat.label} className="bg-white p-6 rounded-2xl border-2 border-slate-900 shadow-[4px_4px_0px_#000]">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">{stat.label}</div>
-                      <div className="flex items-end gap-2 mb-4">
-                        <span className="text-3xl font-serif font-bold text-black">{stat.value}%</span>
-                        <span className="text-[10px] font-bold text-slate-300 pb-1">MARK</span>
+                    <div key={stat.label} className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-5">{stat.label}</div>
+                      <div className="flex items-end gap-2 mb-5">
+                        <span className="text-4xl font-serif font-medium text-slate-900">{stat.value}%</span>
                       </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-slate-200/50 rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${stat.value}%` }}
@@ -195,7 +278,13 @@ function App() {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {activeTab === 'challenges' ? (
+                {activeTab === 'savings' ? (
+                  <VelocityEngine onComplete={handleComplete} />
+                ) : activeTab === 'budgeting' ? (
+                  <LeakHunter onComplete={handleComplete} />
+                ) : activeTab === 'investing' ? (
+                  <MarketPulse onComplete={handleComplete} />
+                ) : activeTab === 'challenges' ? (
                   <ChallengeCase
                     steps={topicsData.challenges.steps}
                     onComplete={(stats) => handleComplete(stats)}

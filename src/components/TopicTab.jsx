@@ -16,22 +16,22 @@ const TopicTab = ({ data, onComplete, accent }) => {
       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-slate-50 blur-[100px] rounded-full -z-10 pointer-events-none" />
       
       {/* Tab Header */}
-      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between border-b-2 border-slate-900 pb-8 px-2 gap-6">
+      <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between border-b border-slate-100 pb-10 px-2 gap-8">
         <div className="max-w-xl">
-          <h2 className="text-4xl font-serif text-black font-bold tracking-tight mb-3">
+          <h2 className="text-5xl font-serif text-slate-900 font-medium tracking-tight mb-4">
             {data.title}
           </h2>
-          <p className="text-slate-500 font-sans text-sm leading-relaxed">
+          <p className="text-slate-500 font-sans text-base leading-relaxed">
             {data.description}
           </p>
         </div>
 
         <div className="text-right">
-          <div className="text-[10px] uppercase font-black tracking-[0.2em] text-black mb-2">Phase Vector</div>
-          <div className="inline-flex items-center gap-2 bg-slate-100 px-4 py-1.5 rounded-full border border-slate-200">
-            <span className={`w-2 h-2 rounded-full ${view === 'matrix' ? 'bg-black' : 'bg-slate-300'}`} />
-            <span className="text-[10px] text-slate-900 font-bold uppercase tracking-wider font-mono">
-              {view === 'matrix' ? 'Concept Retrieval' : 'Strategic Proof'}
+          <div className="text-[10px] uppercase font-bold tracking-[0.3em] text-slate-400 mb-4">Phase Vector</div>
+          <div className="inline-flex items-center gap-3 bg-white px-5 py-2 rounded-xl border border-slate-100 shadow-sm">
+            <span className={`w-1.5 h-1.5 rounded-full ${view === 'matrix' ? 'bg-slate-900' : 'bg-slate-200'}`} />
+            <span className="text-[10px] text-slate-900 font-bold uppercase tracking-widest">
+              {view === 'matrix' ? 'The Framework' : 'The Execution'}
             </span>
           </div>
         </div>
