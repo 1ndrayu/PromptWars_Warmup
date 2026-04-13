@@ -178,7 +178,7 @@ function App() {
                 
                 <h1 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400 mb-6 font-sans">Certification Complete</h1>
                 <h2 className="text-6xl font-serif font-medium mb-12 text-slate-900 leading-tight">
-                   The <span className={profile?.color}>{profile?.name.split(' ').pop()}</span> Persona
+                   The <span className={profile?.color}>{profile?.name ? profile.name.split(' ').pop() : "..."}</span> Persona
                 </h2>
                 
                 <div className="flex flex-wrap justify-center gap-6 mb-16 relative">
